@@ -211,10 +211,21 @@ class RoundState(
                 redraws_used = list(self.redraws_used)
                 # Engine does not transmit the new redraw card directly in action history.
                 # Use a placeholder to preserve shape/indices in local bot state.
+                # Opponent holes are unknown ([] in runner until O at showdown); pad so
+                # replaying their W…K action does not index past the list end.
                 if target_type == 'hole':
-                    hands[active][target_index] = '??'
+                    slot = list(hands[active])
+                    need = max(2, target_index + 1)
+                    while len(slot) < need:
+                        slot.append('??')
+                    slot[target_index] = '??'
+                    hands[active] = slot
                 else:
-                    board[target_index] = '??'
+                    b = list(board)
+                    while len(b) <= target_index:
+                        b.append('??')
+                    b[target_index] = '??'
+                    board = b
                 redraws_used[active] = True
                 state_after_redraw = RoundState(
                     self.button,
